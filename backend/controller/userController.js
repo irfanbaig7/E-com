@@ -18,9 +18,9 @@ export const register = async (req, res) => {
         }
 
         // check user already exist?
-        const user = await User.findOne({ email })
-        if (user) {
-            res.status(400).json({
+        const existingUser = await User.findOne({ email })
+        if (existingUser) {
+            return res.status(400).json({
                 success: false,
                 message: "User already exist please user diffrent email"
             })
@@ -33,8 +33,6 @@ export const register = async (req, res) => {
             email,
             password,
         })
-
-        await newUser.save()
 
         // success msg
 
