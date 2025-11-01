@@ -1,21 +1,57 @@
-# Node modules
+# -------------------------------------------------------------
+# 1. DEPENDENCIES AND MODULES (For both Backend and Frontend)
+# -------------------------------------------------------------
 node_modules/
+/package-lock.json
+/yarn.lock
+/pnpm-lock.yaml
 
-# Logs
-logs/
-*.log
+# -------------------------------------------------------------
+# 2. LOGS AND CACHING
+# -------------------------------------------------------------
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+logs/
+*.log
+.eslintcache
+.babel-cache/
 
-# Environment files
+# -------------------------------------------------------------
+# 3. ENVIRONMENT & SECRETS (Never commit API keys or secrets)
+# -------------------------------------------------------------
 .env
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
 
-# Build output (agar .js files transpiled hote hain)
-dist/
-build/
+# -------------------------------------------------------------
+# 4. BUILD OUTPUTS (The core reason for unnecessary files)
+# -------------------------------------------------------------
+# General Node/Backend Output
+/dist
+/build
+/temp
 
-# OS/IDE specific files
-.DS_Store
+# Create React App / General Frontend Build
+/build 
+
+# Other Frontend Frameworks (if you use them later)
+/out         # Next.js export or some bundlers
+.next/       # Next.js local cache
+.vite/       # Vite cache
+.cache/      # General cache folders
+
+# -------------------------------------------------------------
+# 5. IDE AND OS TEMPORARY FILES
+# -------------------------------------------------------------
+# VS Code
 .vscode/
+
+# IDE Files
 .idea/
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
