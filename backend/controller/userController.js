@@ -2,6 +2,9 @@
 
 import { User } from "../models/userModel.js"
 import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
+import { verifyEmail } from "../emailVerify/verifyEmail.js"
+import mongoose from "mongoose"
 
 
 export const register = async (req, res) => {
@@ -30,17 +33,25 @@ export const register = async (req, res) => {
         // hash the password
         const hashPass = await bcrypt.hash(password, 10)
 
+        // ✅ manual id generate
+        const _id = new mongoose.Types.ObjectId();
 
-        // and finally we can create&save user here
+        // token gen
+        const token = jwt.sign({ id: _id }, process.env.JWT_SECREATEKEY, { expiresIn: '10m' })
+
+        // create&save user here
         const newUser = await User.create({
+            _id,                   // ✅ must include this line
             firstName,
             lastName,
             email,
-            password : hashPass,
+            password: hashPass,
+            token
         })
 
-        // success msg
+        verifyEmail(token, email) // send email here
 
+        // success msg
         return res.status(201).json({
             success: true,
             message: "User registered successfully..",
