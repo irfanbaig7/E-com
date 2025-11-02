@@ -118,3 +118,31 @@ export const verify = async (req, res) => {
     }
 }
 
+
+export const reverify = async (req, res) => {
+    try {
+        const { email } = req.body
+        const user = await User.findOne({ email })
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "user not found"
+            })
+        }
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECREATEKEY, { expiresIn: '10m' })
+        verifyEmail(token, email)
+        user.token = token
+        await user.save()
+        return res.status(200).json({
+            success: true,
+            message: "verification email sent again successfully",
+            token: user.token
+        })
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
