@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import { verifyEmail } from "../emailVerify/verifyEmail.js"
 import mongoose from "mongoose"
+import { Session } from "../models/sessionModel.js"
 
 
 export const register = async (req, res) => {
@@ -15,7 +16,7 @@ export const register = async (req, res) => {
 
         // dont give any kind of empty field
         if (!firstName || !lastName || !email || !password) {
-            res.status(400).json({
+            return res.status(400).json({
                 success: false,
                 message: "All fields are required"
             })
@@ -140,6 +141,99 @@ export const reverify = async (req, res) => {
         })
     } catch (error) {
         res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+
+export const login = async (req, res) => {
+    try {
+
+        const { email, password } = req.body
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "all fields are requried"
+            })
+        }
+
+        const existingUser = await User.findOne({ email })
+        if (!existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: "User not exist"
+            })
+        }
+
+        // if user exist then check there password was match with databases pass
+        const isPasswordValid = await bcrypt.compare(password, existingUser.password)
+        if (!isPasswordValid) {
+            return res.status(400).json({
+                success: false,
+                message: "invalid password"
+            })
+        }
+
+        // check user is that verify or not
+        if (existingUser.isVerified === false) {
+            return res.status(400).json({
+                success: false,
+                message: "verify your account then login"
+            })
+        }
+
+        // create access token and refresh token
+        const accessToken = jwt.sign({ id: existingUser._id }, process.env.JWT_SECREATEKEY, { expiresIn: "10d" })
+        const refreshToken = jwt.sign({ id: existingUser._id }, process.env.JWT_SECREATEKEY, { expiresIn: "30d" })
+
+        existingUser.isLoggedIn = true
+        await existingUser.save()
+
+        // ensure already session existing or not
+        const existinSession = await Session.findOne({ userId: existingUser._id })
+
+        // if session existing then delete them
+        if (existinSession) {
+            await Session.deleteOne({ userId: existingUser._id })
+        }
+
+        // session create 
+        await Session.create({ userId: existingUser._id })
+
+        // scusses return
+        res.status(200).json({
+            success: true,
+            message: `Wlecome back ${existingUser.firstName}`,
+            user: existingUser,
+            accessToken,
+            refreshToken
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+
+export const logout = async (req, res) => {
+    try {
+        const userId = req.id
+        await Session.deleteMany({ userId: userId }) // each created sesison that will be deleting from here
+        await User.findByIdAndUpdate(userId, {
+            isLoggedIn: false
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "User logged out successfully"
+        })
+    } catch (error) {
+        return res.status(500).json({
             success: false,
             message: error.message
         })
