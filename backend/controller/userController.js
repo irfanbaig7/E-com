@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken"
 import { verifyEmail } from "../emailVerify/verifyEmail.js"
 import mongoose from "mongoose"
 import { Session } from "../models/sessionModel.js"
+import { sendOptMail } from "../emailVerify/sendOtpMail.js"
 
 
 export const register = async (req, res) => {
@@ -232,6 +233,43 @@ export const logout = async (req, res) => {
             success: true,
             message: "User logged out successfully"
         })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+
+export const forgotpass = async (req, res) => {
+    try {
+        const { email } = req.body
+        const user = await User.findOne({ email })
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "User not found"
+            })
+        }
+
+        // OTP gen ( 6 digit )
+        const otp = Math.floor(100000 + Math.random() * 900000).toString()
+        const otpExp = new Date(Date.now() + 10 * 60 * 1000)
+        
+        user.otp = otp
+        user.otpExpiry = otpExp
+        
+        await user.save()
+
+        await sendOptMail(otp, email);
+
+        return res.status(200).json({
+            success: true,
+            message: "otp send to mail successfully"
+        })
+
+
     } catch (error) {
         return res.status(500).json({
             success: false,
