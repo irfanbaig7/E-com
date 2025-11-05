@@ -61,11 +61,10 @@ export const register = async (req, res) => {
         })
 
     } catch (error) {
-        console.log(error.message);
+        // console.log(error.message);
         res.status(500).json({
             success: false,
             message: error.message,
-
 
         })
     }
@@ -256,10 +255,10 @@ export const forgotpass = async (req, res) => {
         // OTP gen ( 6 digit )
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
         const otpExp = new Date(Date.now() + 10 * 60 * 1000)
-        
+
         user.otp = otp
         user.otpExpiry = otpExp
-        
+
         await user.save()
 
         await sendOptMail(otp, email);
@@ -269,6 +268,114 @@ export const forgotpass = async (req, res) => {
             message: "otp send to mail successfully"
         })
 
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+
+export const verifyOtp = async (req, res) => {
+    try {
+
+        const { otp } = req.body;
+        const email = req.params.email
+        if (!otp) {
+            return res.status(400).json({
+                success: false,
+                message: "OTP not found"
+            })
+        }
+
+        const user = await User.findOne({ email })
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "user not found"
+            })
+        }
+
+        if (!user.otp || !user.otpExpiry) {
+            return res.status(400).json({
+                success: false,
+                message: "Otp is not gen or already verified"
+            })
+        }
+
+        if (user.otpExpiry < new Date()) {
+            return res.status(400).json({
+                success: false,
+                message: "Otp has expired plz request new otp"
+            })
+        }
+
+        if (otp !== user.otp) {
+            return res.status(400).json({
+                success: false,
+                message: "Otp is invalid"
+            })
+        }
+
+        user.otp = null
+        user.otpExpiry = null
+
+        await user.save()
+        
+        return res.status(200).json({
+            success: true,
+            message: "Otp verified Successfully"
+        })
+
+
+    } catch (error) {      
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+
+export const changePass = async (req, res) => {
+    try {
+
+        const { newPass, confirmPass } = req.body
+        const { email } = req.params
+
+        const user = await User.findOne({ email })
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "user not found"
+            })
+        }
+
+        if (!newPass || !confirmPass) {
+            return res.status(400).json({
+                success: false,
+                message: "all feilds are required"
+            })
+        }
+
+        if (newPass !== confirmPass) {
+            return res.status(400).json({
+                success: false,
+                message: "please put same passwords"
+            })
+        }
+
+        // new pas gen
+        const hashPass = await bcrypt.hash(newPass, 10)
+        user.password = hashPass
+        await user.save()
+
+        return res.status(200).json({
+            success: true,
+            message: "password changed successfully"
+        })
 
     } catch (error) {
         return res.status(500).json({
