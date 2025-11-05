@@ -323,14 +323,14 @@ export const verifyOtp = async (req, res) => {
         user.otpExpiry = null
 
         await user.save()
-        
+
         return res.status(200).json({
             success: true,
             message: "Otp verified Successfully"
         })
 
 
-    } catch (error) {      
+    } catch (error) {
         return res.status(500).json({
             success: false,
             message: error.message
@@ -385,3 +385,19 @@ export const changePass = async (req, res) => {
     }
 }
 
+
+export const allUser = async (_, res) => {
+    try {
+        const users = await User.find() // find(), wll be help us to get everything from DB like users,
+        return res.status(200).json({
+            success: true,
+            message: "All users",
+            users
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}

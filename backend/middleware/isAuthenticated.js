@@ -39,8 +39,8 @@ export const isAuthenticated = async (req, res, next) => {
             })
         }
 
+        req.user = user
         req.id = user._id
-
         next()
 
     } catch (error) {
@@ -50,3 +50,17 @@ export const isAuthenticated = async (req, res, next) => {
         })
     }
 } 
+
+
+// admin access
+
+export const isAdmin = (req, res, next) => {
+    if (req.user && req.user.role === "admin") {
+        next()
+    } else {
+        return res.status(403).json({
+            message: "Access denied: Access admin only"
+        })
+    }
+        
+}
