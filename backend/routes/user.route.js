@@ -1,7 +1,7 @@
 // using express creating routes
 
 import express from "express";
-import { allUser, changePass, forgotpass, login, logout, register, reverify, verify, verifyOtp } from "../controller/userController.js";
+import { allUser, changePass, forgotpass, getUserById, login, logout, register, reverify, verify, verifyOtp } from "../controller/userController.js";
 import { isAdmin, isAuthenticated } from "../middleware/isAuthenticated.js";
 
 
@@ -16,5 +16,6 @@ router.post("/forgot-password", forgotpass)
 router.post("/verify-otp/:email", verifyOtp)
 router.post("/change-pass/:email", changePass)
 router.get("/all-user", isAuthenticated, isAdmin, allUser)
+router.get("/get-user/:userid", getUserById)
 
 export default router

@@ -401,3 +401,29 @@ export const allUser = async (_, res) => {
         })
     }
 }
+
+
+export const getUserById = async (req, res) => {
+    try {
+
+        const { userId } = req.params // extract userid from request params 
+        const user = await User.findById(userId).select("-password -otp -otpExpiry -token")
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "user not found"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "get user by is successfully",
+            user
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
